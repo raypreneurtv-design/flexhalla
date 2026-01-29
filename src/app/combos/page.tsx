@@ -61,11 +61,12 @@ export default function CombosPage() {
                 {/* Combo Grid */}
                 {filteredCombos.length > 0 ? (
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filteredCombos.map((combo) => (
+                        {filteredCombos.map((combo, index) => (
                             <ComboCard
                                 key={combo.id}
                                 combo={combo}
                                 onProgressChange={handleProgressChange}
+                                index={index}
                             />
                         ))}
                     </div>

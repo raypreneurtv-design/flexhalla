@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { saveStats, getLastStats, PlayerStats, clearStats } from '@/lib/progress';
+import { saveStats, getLastStats, PlayerStats, clearStats, getMasteredCombos } from '@/lib/progress';
+import { analyzeWeaknesses, WeaknessAnalysis, getWeaponMasteryStats } from '@/lib/recommendations';
 
 // Mock player data for demonstration
 const mockPlayerData: Record<string, PlayerStats> = {
@@ -24,6 +25,38 @@ const mockPlayerData: Record<string, PlayerStats> = {
         },
         fetchedAt: new Date().toISOString(),
     },
+    'newbie': {
+        brawlhallaId: '87654321',
+        name: 'NewPlayer',
+        rank: 'Silver',
+        elo: 1350,
+        peakElo: 1420,
+        wins: 89,
+        losses: 112,
+        mainLegend: 'Bodvar',
+        legendWinRates: {
+            'Bodvar': 44,
+            'Hattori': 38,
+        },
+        fetchedAt: new Date().toISOString(),
+    },
+    'pro': {
+        brawlhallaId: '11111111',
+        name: 'ProPlayer',
+        rank: 'Diamond',
+        elo: 2150,
+        peakElo: 2234,
+        wins: 1243,
+        losses: 876,
+        mainLegend: 'Mordex',
+        legendWinRates: {
+            'Mordex': 62,
+            'Nix': 58,
+            'Artemis': 55,
+            'Val': 54,
+        },
+        fetchedAt: new Date().toISOString(),
+    },
 };
 
 export default function StatsPage() {
@@ -31,14 +64,17 @@ export default function StatsPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [stats, setStats] = useState<PlayerStats | null>(null);
+    const [weaknesses, setWeaknesses] = useState<WeaknessAnalysis[]>([]);
+    const [weaponStats, setWeaponStats] = useState<Record<string, { mastered: number; total: number; percentage: number }>>({});
 
-    // Load saved stats on mount
-    useState(() => {
+    useEffect(() => {
         const saved = getLastStats();
         if (saved) {
             setStats(saved);
+            setWeaknesses(analyzeWeaknesses(saved));
         }
-    });
+        setWeaponStats(getWeaponMasteryStats(getMasteredCombos()));
+    }, []);
 
     const handleLookup = async () => {
         if (!searchInput.trim()) {
@@ -61,7 +97,7 @@ export default function StatsPage() {
             peakElo: 1400 + Math.floor(Math.random() * 800),
             wins: 100 + Math.floor(Math.random() * 500),
             losses: 100 + Math.floor(Math.random() * 400),
-            mainLegend: ['Orion', 'Bodvar', 'Hattori', 'Teros', 'Val'][Math.floor(Math.random() * 5)],
+            mainLegend: ['Orion', 'Bodvar', 'Hattori', 'Teros', 'Val', 'Mordex', 'Nix'][Math.floor(Math.random() * 7)],
             legendWinRates: {
                 'Orion': 45 + Math.floor(Math.random() * 20),
                 'Bodvar': 45 + Math.floor(Math.random() * 20),
@@ -71,12 +107,14 @@ export default function StatsPage() {
         };
 
         setStats(mockStats);
+        setWeaknesses(analyzeWeaknesses(mockStats));
         saveStats(mockStats);
         setIsLoading(false);
     };
 
     const handleClear = () => {
         setStats(null);
+        setWeaknesses([]);
         setSearchInput('');
         clearStats();
     };
@@ -91,6 +129,22 @@ export default function StatsPage() {
             'Valhallan': '#ff6b6b',
         };
         return colors[rank] || 'var(--text-primary)';
+    };
+
+    const getSeverityColor = (severity: WeaknessAnalysis['severity']) => {
+        switch (severity) {
+            case 'high': return 'var(--danger)';
+            case 'medium': return 'var(--warning)';
+            case 'low': return 'var(--success)';
+        }
+    };
+
+    const getSeverityBorder = (severity: WeaknessAnalysis['severity']) => {
+        switch (severity) {
+            case 'high': return 'border-[var(--danger)]';
+            case 'medium': return 'border-[var(--warning)]';
+            case 'low': return 'border-[var(--success)]';
+        }
     };
 
     const winRate = stats ? Math.round((stats.wins / (stats.wins + stats.losses)) * 100) : 0;
@@ -110,7 +164,7 @@ export default function StatsPage() {
                 </header>
 
                 {/* Search Box */}
-                <div className="card mb-8">
+                <div className="card mb-8 animate-slide-up">
                     <label htmlFor="player-search" className="block text-lg font-semibold mb-4">
                         Look Up Player Stats
                     </label>
@@ -146,7 +200,7 @@ export default function StatsPage() {
                         <p className="mt-3 text-[var(--danger)] text-sm">{error}</p>
                     )}
                     <p className="mt-3 text-[var(--text-muted)] text-sm">
-                        💡 Tip: Try &quot;demo&quot; for sample data. Real Brawlhalla API integration coming soon!
+                        Try: &quot;demo&quot; (Platinum), &quot;newbie&quot; (Silver), or &quot;pro&quot; (Diamond) for sample data
                     </p>
                 </div>
 
@@ -154,7 +208,7 @@ export default function StatsPage() {
                 {stats && (
                     <div className="space-y-6">
                         {/* Player Overview */}
-                        <section className="card">
+                        <section className="card animate-slide-up" style={{ animationDelay: '50ms' }}>
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                                 <div>
                                     <h2 className="text-2xl font-bold">{stats.name}</h2>
@@ -162,7 +216,7 @@ export default function StatsPage() {
                                 </div>
                                 <button
                                     onClick={handleClear}
-                                    className="text-sm text-[var(--text-muted)] hover:text-[var(--danger)]"
+                                    className="text-sm text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors"
                                 >
                                     Clear data
                                 </button>
@@ -193,7 +247,7 @@ export default function StatsPage() {
                         </section>
 
                         {/* Win/Loss Breakdown */}
-                        <section className="card">
+                        <section className="card animate-slide-up" style={{ animationDelay: '100ms' }}>
                             <h3 className="text-xl font-bold mb-4">Match History</h3>
                             <div className="flex items-center gap-4 mb-4">
                                 <div className="flex-1">
@@ -203,7 +257,7 @@ export default function StatsPage() {
                                     </div>
                                     <div className="h-4 bg-[var(--danger)] rounded-full overflow-hidden">
                                         <div
-                                            className="h-full bg-[var(--success)] transition-all"
+                                            className="h-full bg-[var(--success)] transition-all animate-xp-fill"
                                             style={{ width: `${winRate}%` }}
                                         />
                                     </div>
@@ -215,7 +269,7 @@ export default function StatsPage() {
                         </section>
 
                         {/* Legend Win Rates */}
-                        <section className="card">
+                        <section className="card animate-slide-up" style={{ animationDelay: '150ms' }}>
                             <h3 className="text-xl font-bold mb-4">Legend Performance</h3>
                             <div className="space-y-3">
                                 {Object.entries(stats.legendWinRates).map(([legend, rate]) => (
@@ -223,10 +277,11 @@ export default function StatsPage() {
                                         <span className="w-20 text-sm font-medium">{legend}</span>
                                         <div className="flex-1 h-3 bg-[var(--bg-elevated)] rounded-full overflow-hidden">
                                             <div
-                                                className="h-full rounded-full transition-all"
+                                                className="h-full rounded-full transition-all animate-xp-fill"
                                                 style={{
                                                     width: `${rate}%`,
-                                                    backgroundColor: rate >= 55 ? 'var(--success)' : rate >= 50 ? 'var(--warning)' : 'var(--danger)'
+                                                    backgroundColor: rate >= 55 ? 'var(--success)' : rate >= 50 ? 'var(--warning)' : 'var(--danger)',
+                                                    animationDelay: '0.3s'
                                                 }}
                                             />
                                         </div>
@@ -234,42 +289,85 @@ export default function StatsPage() {
                                     </div>
                                 ))}
                             </div>
+                            <p className="text-sm text-[var(--text-muted)] mt-4">
+                                Main: <span className="text-[var(--accent)] font-bold">{stats.mainLegend}</span>
+                            </p>
                         </section>
 
-                        {/* Weakness Analysis */}
-                        <section className="card bg-gradient-to-br from-[var(--bg-card)] to-[var(--primary)]/10">
-                            <h3 className="text-xl font-bold mb-4">🎯 Weakness Scanner</h3>
+                        {/* Dynamic Weakness Analysis */}
+                        <section className="card bg-gradient-to-br from-[var(--bg-card)] to-[var(--primary)]/10 animate-slide-up" style={{ animationDelay: '200ms' }}>
+                            <h3 className="text-xl font-bold mb-4">Weakness Scanner</h3>
                             <div className="space-y-4">
-                                <div className="p-4 bg-[var(--bg-elevated)] rounded-lg border-l-4 border-[var(--warning)]">
-                                    <h4 className="font-bold text-[var(--warning)] mb-1">Edge Guarding</h4>
-                                    <p className="text-sm text-[var(--text-secondary)]">
-                                        Your off-stage play could use improvement. Focus on gimping with Dair and Recovery moves.
-                                    </p>
-                                </div>
-                                <div className="p-4 bg-[var(--bg-elevated)] rounded-lg border-l-4 border-[var(--danger)]">
-                                    <h4 className="font-bold text-[var(--danger)] mb-1">String Extensions</h4>
-                                    <p className="text-sm text-[var(--text-secondary)]">
-                                        You&apos;re leaving damage on the table. Practice extending your true combos into strings.
-                                    </p>
-                                </div>
-                                <div className="p-4 bg-[var(--bg-elevated)] rounded-lg border-l-4 border-[var(--success)]">
-                                    <h4 className="font-bold text-[var(--success)] mb-1">Spacing</h4>
-                                    <p className="text-sm text-[var(--text-secondary)]">
-                                        Your neutral game is solid. Keep controlling the pace of matches.
-                                    </p>
-                                </div>
+                                {weaknesses.map((weakness, index) => (
+                                    <div
+                                        key={weakness.category}
+                                        className={`p-4 bg-[var(--bg-elevated)] rounded-lg border-l-4 ${getSeverityBorder(weakness.severity)} animate-slide-up`}
+                                        style={{ animationDelay: `${250 + index * 50}ms` }}
+                                    >
+                                        <div className="flex items-center justify-between mb-1">
+                                            <h4 className="font-bold" style={{ color: getSeverityColor(weakness.severity) }}>
+                                                {weakness.title}
+                                            </h4>
+                                            <span
+                                                className="text-xs px-2 py-0.5 rounded-full uppercase font-bold"
+                                                style={{
+                                                    backgroundColor: `${getSeverityColor(weakness.severity)}20`,
+                                                    color: getSeverityColor(weakness.severity)
+                                                }}
+                                            >
+                                                {weakness.severity}
+                                            </span>
+                                        </div>
+                                        <p className="text-sm text-[var(--text-secondary)] mb-2">
+                                            {weakness.description}
+                                        </p>
+                                        <div className="flex flex-wrap gap-1">
+                                            {weakness.recommendedTags.map(tag => (
+                                                <span
+                                                    key={tag}
+                                                    className="text-xs px-2 py-0.5 rounded-full bg-[var(--primary)]/20 text-[var(--primary-light)]"
+                                                >
+                                                    {tag}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
 
                             <Link href="/training" className="btn btn-accent w-full mt-6">
                                 Start Training Based on Analysis
                             </Link>
                         </section>
+
+                        {/* Weapon Mastery Overview */}
+                        <section className="card animate-slide-up" style={{ animationDelay: '300ms' }}>
+                            <h3 className="text-xl font-bold mb-4">Your Combo Mastery</h3>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                                {Object.entries(weaponStats).map(([weapon, stat]) => (
+                                    <div
+                                        key={weapon}
+                                        className="bg-[var(--bg-elevated)] rounded-lg p-3 text-center"
+                                    >
+                                        <div className="text-sm font-medium text-[var(--text-secondary)] mb-1">{weapon}</div>
+                                        <div className="text-lg font-bold" style={{
+                                            color: stat.percentage === 100 ? 'var(--success)' :
+                                                   stat.percentage > 50 ? 'var(--warning)' :
+                                                   stat.percentage > 0 ? 'var(--accent)' : 'var(--text-muted)'
+                                        }}>
+                                            {stat.mastered}/{stat.total}
+                                        </div>
+                                        <div className="text-xs text-[var(--text-muted)]">{stat.percentage}%</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
                     </div>
                 )}
 
                 {/* Empty State */}
                 {!stats && !isLoading && (
-                    <div className="text-center py-16">
+                    <div className="text-center py-16 animate-slide-up">
                         <div className="text-6xl mb-4">📊</div>
                         <h2 className="text-xl font-bold mb-2">No stats loaded</h2>
                         <p className="text-[var(--text-secondary)] mb-6">

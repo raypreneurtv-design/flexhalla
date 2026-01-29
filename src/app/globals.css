@@ -426,3 +426,233 @@ button:focus {
 .logo-container {
   filter: drop-shadow(0 4px 20px rgba(0, 0, 0, 0.5));
 }
+
+/* ==================== NEW ANIMATIONS ==================== */
+
+/* Card entrance - staggered slide-up */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.4s ease-out forwards;
+  opacity: 0;
+}
+
+/* Button feedback - pulse on click */
+@keyframes btn-pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.btn-pulse:active {
+  animation: btn-pulse 0.15s ease-out;
+}
+
+/* Modal animations */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.3s ease-out forwards;
+}
+
+/* Filter transitions - smooth fade */
+@keyframes filter-fade {
+  from {
+    opacity: 0.5;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.filter-transition {
+  animation: filter-fade 0.2s ease-out;
+}
+
+/* Achievement unlock - confetti burst */
+@keyframes confetti-pop {
+  0% {
+    transform: scale(0) rotate(-10deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2) rotate(5deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0);
+    opacity: 1;
+  }
+}
+
+.animate-confetti-pop {
+  animation: confetti-pop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+/* Bounce once for mastered state */
+@keyframes bounce-once {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  25% {
+    transform: translateY(-8px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.animate-bounce-once {
+  animation: bounce-once 0.5s ease-out;
+}
+
+/* XP bar fill animation */
+@keyframes xp-fill {
+  from {
+    width: 0;
+  }
+}
+
+.animate-xp-fill {
+  animation: xp-fill 1s ease-out forwards;
+}
+
+/* Streak flame animation */
+@keyframes flame-flicker {
+  0%, 100% {
+    transform: scaleY(1) scaleX(1);
+    opacity: 1;
+  }
+  25% {
+    transform: scaleY(1.05) scaleX(0.95);
+    opacity: 0.95;
+  }
+  50% {
+    transform: scaleY(0.95) scaleX(1.05);
+    opacity: 1;
+  }
+  75% {
+    transform: scaleY(1.02) scaleX(0.98);
+    opacity: 0.98;
+  }
+}
+
+.animate-flame {
+  animation: flame-flicker 1.5s ease-in-out infinite;
+}
+
+/* Toast slide in */
+@keyframes toast-slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toast-slide-out {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.animate-toast-in {
+  animation: toast-slide-in 0.3s ease-out forwards;
+}
+
+.animate-toast-out {
+  animation: toast-slide-out 0.3s ease-in forwards;
+}
+
+/* Progress ring animation */
+@keyframes progress-ring {
+  from {
+    stroke-dashoffset: 283;
+  }
+}
+
+.animate-progress-ring {
+  animation: progress-ring 1s ease-out forwards;
+}
+
+/* Shimmer effect for loading */
+@keyframes shimmer-loading {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--bg-elevated) 25%,
+    var(--bg-card-hover) 50%,
+    var(--bg-elevated) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer-loading 1.5s infinite;
+}
+
+/* Number counter animation */
+@keyframes count-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-count {
+  animation: count-up 0.3s ease-out forwards;
+}
